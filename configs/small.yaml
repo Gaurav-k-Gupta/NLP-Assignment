@@ -1,0 +1,14 @@
+name: small
+d_model: 256
+n_heads: 8
+d_ff: 1024
+n_encoder_layers: 3
+n_decoder_layers: 3
+dropout: 0.1
+max_source_length: 400
+max_target_length: 128
+batch_size: 8
+learning_rate_multiplier: 1.0
+warmup_steps: 4000
+label_smoothing: 0.0
+tie_embeddings: true

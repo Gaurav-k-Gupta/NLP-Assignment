@@ -1,0 +1,11 @@
+checkpoints/
+data/
+cache/
+*.pt
+*.pth
+*.ckpt
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.env
+.pytest_cache/

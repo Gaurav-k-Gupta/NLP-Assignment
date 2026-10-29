@@ -1,0 +1,10 @@
+datasets
+transformers
+rouge_score
+nltk
+matplotlib
+numpy
+pandas
+tqdm
+pyyaml
+pytest
