@@ -14,7 +14,8 @@ def main():
     cfg=yaml.safe_load(open(a.config)); rawtok=get_tokenizer(); tok=SummaryTokenizer(rawtok); dev=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     ds=TokenizedDataset(load_split('test',a.max_test_samples),tok,cfg['max_source_length'],cfg['max_target_length']); loader=make_loader(ds,a.batch_size,tok.special.pad_id,False)
     model=TransformerSummarizer(len(rawtok),tok.special.pad_id,**{k:cfg[k] for k in ('d_model','n_heads','d_ff','n_encoder_layers','n_decoder_layers','dropout','tie_embeddings')}).to(dev)
-    state=torch.load(a.checkpoint,map_location=dev); model.load_state_dict(state['model']); outdir=Path('results')/a.run_name; outdir.mkdir(parents=True,exist_ok=True)
+    # Checkpoint is a trusted artifact produced by this training code.
+    state=torch.load(a.checkpoint,map_location=dev,weights_only=False); model.load_state_dict(state['model']); outdir=Path('results')/a.run_name; outdir.mkdir(parents=True,exist_ok=True)
     preds_path=outdir/'test_predictions.jsonl.gz'; predictions=[]
     with gzip.open(preds_path,'wt',encoding='utf8') as f:
         for b in loader:

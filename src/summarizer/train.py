@@ -44,7 +44,8 @@ def main():
     ckpt=ckptdir/(args.run_name+'_last.pt'); bestpath=ckptdir/(args.run_name+'_best.pt')
     step=0; best=float('inf'); stale=0; start_epoch=0; history=[]; t0=time.time()
     if ckpt.exists():
-        state=torch.load(ckpt,map_location=dev); model.load_state_dict(state['model']); opt.load_state_dict(state['optimizer']); scaler.load_state_dict(state['scaler'])
+        # Full resume checkpoints include optimizer and RNG objects; load only trusted files we created.
+        state=torch.load(ckpt,map_location=dev,weights_only=False); model.load_state_dict(state['model']); opt.load_state_dict(state['optimizer']); scaler.load_state_dict(state['scaler'])
         step=state['step']; best=state['best']; stale=state['stale']; start_epoch=state['epoch']; history=state['history']
         random.setstate(state['python_rng']); np.random.set_state(state['numpy_rng']); torch.set_rng_state(state['torch_rng'])
         if dev.type=='cuda' and state.get('cuda_rng'): torch.cuda.set_rng_state_all(state['cuda_rng'])
@@ -70,7 +71,7 @@ def main():
         save_state(ckpt,model,opt,scaler,step,best,stale,epoch+1,history); write_history(run,history)
         if stale>=args.patience: break
     # Restore best parameters after training for downstream use.
-    if bestpath.exists(): model.load_state_dict(torch.load(bestpath,map_location=dev)['model'])
+    if bestpath.exists(): model.load_state_dict(torch.load(bestpath,map_location=dev,weights_only=False)['model'])
     (run/'config.json').write_text(json.dumps(cfg,indent=2)); (run/'run_info.json').write_text(json.dumps({'train_size':len(train),'val_size':len(val),'token_length_stats':length_stats(train),'parameter_count':model.parameter_count(),'device':str(dev),'torch_version':torch.__version__,'cuda_version':torch.version.cuda,'wall_seconds':time.time()-t0},indent=2))
 
 def save_state(path,model,opt,scaler,step,best,stale,epoch,history):
