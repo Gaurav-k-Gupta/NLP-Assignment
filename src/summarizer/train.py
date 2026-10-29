@@ -55,6 +55,13 @@ def main():
         torch.set_rng_state(rng_byte_tensor(state['torch_rng']))
         if dev.type=='cuda' and state.get('cuda_rng'):
             torch.cuda.set_rng_state_all([rng_byte_tensor(rng) for rng in state['cuda_rng']])
+        if not bestpath.exists():
+            # The last checkpoint stores a best-loss value, but may outlive its best-weight file.
+            baseline,_=evaluate_loss(model,va_loader,dev,tok.special.pad_id)
+            if not math.isfinite(baseline):
+                raise RuntimeError("Resume checkpoint has non-finite validation loss; start a fresh run")
+            best=baseline; stale=0
+            torch.save({'model':model.state_dict(),'step':step,'val_loss':best,'config':cfg},bestpath)
     for epoch in range(start_epoch,args.epochs):
         model.train()
         for batch in tr_loader:
@@ -64,12 +71,16 @@ def main():
             opt.zero_grad(set_to_none=True)
             with torch.cuda.amp.autocast(enabled=dev.type=='cuda'):
                 logits=model(src,tgt[:,:-1]); loss=F.cross_entropy(logits.reshape(-1,logits.size(-1)),tgt[:,1:].reshape(-1),ignore_index=tok.special.pad_id,label_smoothing=cfg.get('label_smoothing',0.0))
+            if not torch.isfinite(loss):
+                raise RuntimeError("Non-finite training loss at step %d; start a fresh run" % step)
             scaler.scale(loss).backward(); scaler.unscale_(opt); torch.nn.utils.clip_grad_norm_(model.parameters(),1.0); scaler.step(opt); scaler.update()
             history.append({'step':step,'epoch':epoch+1,'train_loss':loss.item(),'lr':lr,'tokens_per_sec':int((tgt!=tok.special.pad_id).sum().item())/max(time.time()-t0,1e-6),'val_loss':'','val_perplexity':''})
             budget=args.time_budget_minutes*60
             if budget and time.time()-t0>budget:
                 save_state(ckpt,model,opt,scaler,step,best,stale,epoch,history); write_history(run,history); return
         val_loss,ppl=evaluate_loss(model,va_loader,dev,tok.special.pad_id)
+        if not math.isfinite(val_loss):
+            raise RuntimeError("Non-finite validation loss at epoch %d; refusing to save this checkpoint" % (epoch+1))
         history.append({'step':step,'epoch':epoch+1,'train_loss':'','lr':'','tokens_per_sec':'','val_loss':val_loss,'val_perplexity':ppl})
         if val_loss<best:
             best=val_loss; stale=0; torch.save({'model':model.state_dict(),'step':step,'val_loss':best,'config':cfg},bestpath)

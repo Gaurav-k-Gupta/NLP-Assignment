@@ -9,7 +9,9 @@ def scaled_dot_product_attention(q: torch.Tensor, k: torch.Tensor, v: torch.Tens
                                  mask: Optional[torch.Tensor] = None,
                                  dropout: Optional[nn.Dropout] = None) -> Tuple[torch.Tensor, torch.Tensor]:
     """q/k/v: (B,H,Tq/Tk,d); mask broadcasts to (B,H,Tq,Tk), True=blocked."""
-    scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(q.size(-1))
+    # Autocast can overflow QK^T in fp16 before the float32 softmax is reached.
+    with torch.autocast(device_type=q.device.type, enabled=False):
+        scores = torch.matmul(q.float(), k.float().transpose(-2, -1)) / math.sqrt(q.size(-1))
     if mask is not None:
         scores = scores.masked_fill(mask, torch.finfo(scores.dtype).min)
     weights = torch.softmax(scores.float(), dim=-1)
