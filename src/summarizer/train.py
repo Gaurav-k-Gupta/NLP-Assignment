@@ -14,6 +14,10 @@ def seed_all(seed):
     random.seed(seed); np.random.seed(seed); torch.manual_seed(seed)
     if torch.cuda.is_available(): torch.cuda.manual_seed_all(seed)
 
+def rng_byte_tensor(state):
+    """Normalize checkpoint RNG state to the CPU ByteTensor PyTorch expects."""
+    return torch.as_tensor(state, dtype=torch.uint8, device='cpu').contiguous()
+
 def schedule(step,d_model,warmup,multiplier):
     step=max(step,1); return multiplier*(d_model**-0.5)*min(step**-0.5,step*(warmup**-1.5))
 
@@ -47,8 +51,10 @@ def main():
         # Full resume checkpoints include optimizer and RNG objects; load only trusted files we created.
         state=torch.load(ckpt,map_location=dev,weights_only=False); model.load_state_dict(state['model']); opt.load_state_dict(state['optimizer']); scaler.load_state_dict(state['scaler'])
         step=state['step']; best=state['best']; stale=state['stale']; start_epoch=state['epoch']; history=state['history']
-        random.setstate(state['python_rng']); np.random.set_state(state['numpy_rng']); torch.set_rng_state(state['torch_rng'])
-        if dev.type=='cuda' and state.get('cuda_rng'): torch.cuda.set_rng_state_all(state['cuda_rng'])
+        random.setstate(state['python_rng']); np.random.set_state(state['numpy_rng'])
+        torch.set_rng_state(rng_byte_tensor(state['torch_rng']))
+        if dev.type=='cuda' and state.get('cuda_rng'):
+            torch.cuda.set_rng_state_all([rng_byte_tensor(rng) for rng in state['cuda_rng']])
     for epoch in range(start_epoch,args.epochs):
         model.train()
         for batch in tr_loader:
