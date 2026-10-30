@@ -1,0 +1,24 @@
+{
+  "train_size": 287113,
+  "val_size": 13368,
+  "token_length_stats": {
+    "articles": {
+      "median": 400.0,
+      "p90": 400.0,
+      "max": 400,
+      "percent_over_limit": 0.0
+    },
+    "summaries": {
+      "median": 63.0,
+      "p90": 99.0,
+      "max": 128,
+      "percent_over_limit": 0.0
+    },
+    "n": 287113
+  },
+  "parameter_count": 13343232,
+  "device": "cuda",
+  "torch_version": "2.6.0+cu124",
+  "cuda_version": "12.4",
+  "wall_seconds": 18531.782911539078
+}

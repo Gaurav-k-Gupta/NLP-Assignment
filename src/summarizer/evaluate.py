@@ -2,6 +2,7 @@
 import argparse,gzip,json,os
 from pathlib import Path
 import torch
+from tqdm.auto import tqdm
 from .data import load_split,get_tokenizer,TokenizedDataset,make_loader
 from .tokenization import SummaryTokenizer
 from .model.transformer import TransformerSummarizer
@@ -18,7 +19,7 @@ def main():
     state=torch.load(a.checkpoint,map_location=dev,weights_only=False); model.load_state_dict(state['model']); outdir=Path('results')/a.run_name; outdir.mkdir(parents=True,exist_ok=True)
     preds_path=outdir/'test_predictions.jsonl.gz'; predictions=[]
     with gzip.open(preds_path,'wt',encoding='utf8') as f:
-        for b in loader:
+        for b in tqdm(loader,desc='Generating test summaries',unit='batch'):
             src=b['src'].to(dev)
             if not (outdir/'attention_example.json').exists():
                 generated,attn=greedy_generate(model,src,tok.special.bos_id,tok.special.eos_id,cfg['max_target_length'],True)

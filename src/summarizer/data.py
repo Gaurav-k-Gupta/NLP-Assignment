@@ -1,12 +1,23 @@
 """Dataset loading, token cache and length-bucketed batches."""
-import os, json, random
+import os, json, random, gzip
 from pathlib import Path
 from typing import Optional
+from itertools import islice
 import torch
 from torch.utils.data import Dataset, DataLoader
+from tqdm.auto import tqdm
 
 
 def load_split(split: str, limit: Optional[int] = None):
+    data_dir=os.getenv('DATA_DIR')
+    if data_dir:
+        path=Path(data_dir)/(split+'.jsonl.gz')
+        if path.exists():
+            def rows():
+                with gzip.open(path,'rt',encoding='utf8') as f:
+                    source=(json.loads(line) for line in f if line.strip())
+                    yield from islice(source,limit) if limit is not None else source
+            return rows()
     from datasets import load_dataset
     try: ds = load_dataset("cnn_dailymail", "3.0.0", split=split)
     except Exception as canonical_error:
@@ -19,13 +30,14 @@ def load_split(split: str, limit: Optional[int] = None):
 
 def get_tokenizer(name="bert-base-uncased"):
     from transformers import AutoTokenizer
-    return AutoTokenizer.from_pretrained(name, use_fast=True)
+    name=os.getenv('TOKENIZER_DIR',name)
+    return AutoTokenizer.from_pretrained(name, use_fast=True, local_files_only=Path(name).exists())
 
 
 class TokenizedDataset(Dataset):
     def __init__(self, rows, tokenizer, max_source=400, max_target=128):
         self.rows=[]; self.tokenizer=tokenizer
-        for row in rows:
+        for row in tqdm(rows,desc='Tokenizing',unit='rows'):
             src=tokenizer.encode_article(row["article"], max_source)
             tgt=tokenizer.encode_summary(row["highlights"], max_target)
             self.rows.append((src,tgt,row.get("id", str(len(self.rows))),row["article"],row["highlights"]))

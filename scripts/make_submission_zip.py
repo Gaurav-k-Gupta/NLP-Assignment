@@ -1,15 +1,42 @@
-import argparse,zipfile
+"""Build source/report submission archive without data, predictions, or checkpoints."""
+import argparse
+import zipfile
 from pathlib import Path
-p=argparse.ArgumentParser(); p.add_argument('--output',default='submission.zip'); a=p.parse_args()
-root=Path(__file__).resolve().parents[1]; out=root/a.output
-allowed=['README.md','requirements.txt','.gitignore','configs','docs','src','scripts','tests','notebooks','report','results']
-with zipfile.ZipFile(out,'w',zipfile.ZIP_DEFLATED) as z:
-    for item in allowed:
-        path=root/item
-        if not path.exists(): continue
-        files=[path] if path.is_file() else path.rglob('*')
-        for f in files:
-            if not f.is_file() or any(x in f.parts for x in ('.git','checkpoints','cache','data','__pycache__')): continue
-            if f.stat().st_size>20*1024*1024: raise SystemExit('Refusing large file: '+str(f))
-            z.write(f,f.relative_to(root))
-print(out)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--output', default='submission.zip')
+    args = parser.parse_args()
+
+    root = Path(__file__).resolve().parents[1]
+    output = (root / args.output).resolve()
+    allowed = [
+        'README.md', 'requirements.txt', '.gitignore', 'configs', 'docs', 'src',
+        'scripts', 'tests', 'notebooks', 'report', 'results'
+    ]
+    excluded_dirs = {'.git', 'checkpoints', 'cache', 'data', 'offline_data', '__pycache__', 'host-cnn-small'}
+    excluded_suffixes = {'.pt', '.pth', '.ckpt'}
+    excluded_names = {'.DS_Store', 'test_predictions.jsonl.gz', 'loss_curves.png'}
+
+    with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+        for item in allowed:
+            path = root / item
+            if not path.exists():
+                continue
+            files = [path] if path.is_file() else path.rglob('*')
+            for file in files:
+                if not file.is_file() or file.resolve() == output:
+                    continue
+                relative = file.relative_to(root)
+                if any(part in excluded_dirs for part in relative.parts):
+                    continue
+                if file.name in excluded_names or file.suffix in excluded_suffixes:
+                    continue
+                archive.write(file, relative)
+
+    print(output)
+
+
+if __name__ == '__main__':
+    main()

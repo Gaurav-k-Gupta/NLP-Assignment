@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="540" viewBox="0 0 900 540">
+<rect width="100%" height="100%" fill="white"/>
+<g font-family="sans-serif" fill="#222">
+<text x="450.0" y="30" text-anchor="middle" font-size="20">Mean training and validation loss by epoch</text>
+<path d="M90 455.0H865" stroke="#ddd"/>
+<text x="78" y="459.0" text-anchor="end" font-size="11">4.352</text>
+<path d="M90 377.0H865" stroke="#ddd"/>
+<text x="78" y="381.0" text-anchor="end" font-size="11">4.596</text>
+<path d="M90 299.0H865" stroke="#ddd"/>
+<text x="78" y="303.0" text-anchor="end" font-size="11">4.84</text>
+<path d="M90 221.0H865" stroke="#ddd"/>
+<text x="78" y="225.0" text-anchor="end" font-size="11">5.084</text>
+<path d="M90 143.0H865" stroke="#ddd"/>
+<text x="78" y="147.0" text-anchor="end" font-size="11">5.328</text>
+<path d="M90 65.0H865" stroke="#ddd"/>
+<text x="78" y="69.0" text-anchor="end" font-size="11">5.572</text>
+<path d="M90.0 65V455" stroke="#eee"/>
+<text x="90.0" y="477" text-anchor="middle" font-size="11">1</text>
+<path d="M176.1 65V455" stroke="#eee"/>
+<text x="176.1" y="477" text-anchor="middle" font-size="11">2</text>
+<path d="M262.2 65V455" stroke="#eee"/>
+<text x="262.2" y="477" text-anchor="middle" font-size="11">3</text>
+<path d="M348.3 65V455" stroke="#eee"/>
+<text x="348.3" y="477" text-anchor="middle" font-size="11">4</text>
+<path d="M434.4 65V455" stroke="#eee"/>
+<text x="434.4" y="477" text-anchor="middle" font-size="11">5</text>
+<path d="M520.6 65V455" stroke="#eee"/>
+<text x="520.6" y="477" text-anchor="middle" font-size="11">6</text>
+<path d="M606.7 65V455" stroke="#eee"/>
+<text x="606.7" y="477" text-anchor="middle" font-size="11">7</text>
+<path d="M692.8 65V455" stroke="#eee"/>
+<text x="692.8" y="477" text-anchor="middle" font-size="11">8</text>
+<path d="M778.9 65V455" stroke="#eee"/>
+<text x="778.9" y="477" text-anchor="middle" font-size="11">9</text>
+<path d="M865.0 65V455" stroke="#eee"/>
+<text x="865.0" y="477" text-anchor="middle" font-size="11">10</text>
+<path d="M90 65V455H865" fill="none" stroke="#333"/>
+<text x="450.0" y="518" text-anchor="middle" font-size="13">Epoch</text>
+<text x="20" y="270.0" transform="rotate(-90 20,270.0)" text-anchor="middle" font-size="13">Cross-entropy loss</text>
+<polyline points="90.0,82.7 176.1,242.6 262.2,279.1 348.3,298.5 434.4,311.1 520.6,322.2 606.7,330.4 692.8,336.1 778.9,342.3 865.0,347.8" fill="none" stroke="#2864a5" stroke-width="2.5"/>
+<circle cx="90.0" cy="82.7" r="3.5" fill="#2864a5"/>
+<circle cx="176.1" cy="242.6" r="3.5" fill="#2864a5"/>
+<circle cx="262.2" cy="279.1" r="3.5" fill="#2864a5"/>
+<circle cx="348.3" cy="298.5" r="3.5" fill="#2864a5"/>
+<circle cx="434.4" cy="311.1" r="3.5" fill="#2864a5"/>
+<circle cx="520.6" cy="322.2" r="3.5" fill="#2864a5"/>
+<circle cx="606.7" cy="330.4" r="3.5" fill="#2864a5"/>
+<circle cx="692.8" cy="336.1" r="3.5" fill="#2864a5"/>
+<circle cx="778.9" cy="342.3" r="3.5" fill="#2864a5"/>
+<circle cx="865.0" cy="347.8" r="3.5" fill="#2864a5"/>
+<path d="M105 83h25" stroke="#2864a5" stroke-width="3"/>
+<text x="137" y="87" font-size="12">Train mean</text>
+<polyline points="90.0,275.3 176.1,337.3 262.2,361.4 348.3,381.8 434.4,396.0 520.6,406.7 606.7,416.2 692.8,425.4 778.9,429.5 865.0,437.3" fill="none" stroke="#c63d35" stroke-width="2.5"/>
+<circle cx="90.0" cy="275.3" r="3.5" fill="#c63d35"/>
+<circle cx="176.1" cy="337.3" r="3.5" fill="#c63d35"/>
+<circle cx="262.2" cy="361.4" r="3.5" fill="#c63d35"/>
+<circle cx="348.3" cy="381.8" r="3.5" fill="#c63d35"/>
+<circle cx="434.4" cy="396.0" r="3.5" fill="#c63d35"/>
+<circle cx="520.6" cy="406.7" r="3.5" fill="#c63d35"/>
+<circle cx="606.7" cy="416.2" r="3.5" fill="#c63d35"/>
+<circle cx="692.8" cy="425.4" r="3.5" fill="#c63d35"/>
+<circle cx="778.9" cy="429.5" r="3.5" fill="#c63d35"/>
+<circle cx="865.0" cy="437.3" r="3.5" fill="#c63d35"/>
+<path d="M285 83h25" stroke="#c63d35" stroke-width="3"/>
+<text x="317" y="87" font-size="12">Validation</text>
+</g></svg>

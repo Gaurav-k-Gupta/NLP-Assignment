@@ -1,0 +1,8 @@
+{
+  "unit": "whitespace-like word count via regex, not WordPiece tokens",
+  "n": 11490,
+  "reference_mean_words": 52.31209747606614,
+  "prediction_mean_words": 55.37267188859878,
+  "reference_median_words": 49,
+  "prediction_median_words": 51
+}

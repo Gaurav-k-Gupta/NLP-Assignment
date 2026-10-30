@@ -43,6 +43,21 @@ Training resumes from `checkpoints/<run>_last.pt`; best validation weights are k
 
 `src/summarizer/model/` contains attention, positional encoding, layers and full model; `data.py` and `tokenization.py` handle data; `train.py`, `generate.py`, and `evaluate.py` implement the workflow. `scripts/` contains checks and report utilities. `tests/` holds CPU unit tests. `notebooks/colab_run.ipynb` mirrors the run order. Dataset caches and checkpoints are git-ignored.
 
-## Results
+## Completed Q3 run
 
-No experiments are represented as completed until code writes their artifacts. Current result status: **NOT RUN YET**.
+The `cnn-small` run trained on all 287,113 training examples for 10 epochs and selected its checkpoint using the 13,368-example validation split. Full greedy test evaluation used all 11,490 test examples. ROUGE F1: R-1 19.03, R-2 3.12, R-L 14.74, R-Lsum 17.40. Full details and analysis: [report/FINAL_REPORT.md](report/FINAL_REPORT.md). Artifact status: [results/STATUS.md](results/STATUS.md).
+
+## Reproduce the recorded run
+
+Place CNN/DailyMail 3.0.0 files in `offline_data/{train,validation,test}.jsonl.gz` and tokenizer files in `offline_data/tokenizer/`. Keep the dataset and checkpoints outside the submission archive. Then set:
+
+```bash
+export PYTHONPATH=src
+export DATA_DIR=offline_data
+export TOKENIZER_DIR=offline_data/tokenizer
+export CKPT_DIR=checkpoints
+```
+
+Train with `python -m summarizer.train --config configs/small.yaml --run-name cnn-small --epochs 10 --patience 3`. Evaluate with `python -m summarizer.evaluate --config configs/small.yaml --run-name cnn-small --checkpoint checkpoints/cnn-small_best.pt --batch-size 8`. Use `python scripts/make_report_figures.py` to regenerate report figures and `python scripts/make_submission_zip.py` to build the source/report archive.
+
+The complete test prediction file and checkpoints remain local for analysis. The submission builder excludes both, along with the dataset.

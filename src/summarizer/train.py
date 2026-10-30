@@ -35,6 +35,7 @@ def main():
     ap=argparse.ArgumentParser(); ap.add_argument('--config',default='configs/small.yaml'); ap.add_argument('--run-name',default='run')
     ap.add_argument('--max-train-samples',type=int); ap.add_argument('--max-val-samples',type=int)
     ap.add_argument('--epochs',type=int,default=10); ap.add_argument('--patience',type=int,default=3)
+    ap.add_argument('--log-interval',type=int,default=500,help='Print training progress every N batches')
     ap.add_argument('--time-budget-minutes',type=float,default=0); ap.add_argument('--seed',type=int,default=17)
     ap.add_argument('--ckpt-dir',default=os.getenv('CKPT_DIR','checkpoints')); args=ap.parse_args()
     cfg=yaml.safe_load(open(args.config)); seed_all(args.seed); dev=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -63,7 +64,8 @@ def main():
             best=baseline; stale=0
             torch.save({'model':model.state_dict(),'step':step,'val_loss':best,'config':cfg},bestpath)
     for epoch in range(start_epoch,args.epochs):
-        model.train()
+        model.train(); epoch_started=time.time(); epoch_loss=0.; epoch_batches=0
+        print('Epoch %d/%d started at step %d (%d batches)' % (epoch+1,args.epochs,step,len(tr_loader)),flush=True)
         for batch in tr_loader:
             src=batch['src'].to(dev); tgt=batch['tgt'].to(dev); step+=1
             lr=schedule(step,cfg['d_model'],cfg['warmup_steps'],cfg['learning_rate_multiplier'])
@@ -74,10 +76,15 @@ def main():
             if not torch.isfinite(loss):
                 raise RuntimeError("Non-finite training loss at step %d; start a fresh run" % step)
             scaler.scale(loss).backward(); scaler.unscale_(opt); torch.nn.utils.clip_grad_norm_(model.parameters(),1.0); scaler.step(opt); scaler.update()
+            epoch_loss+=loss.item(); epoch_batches+=1
+            if args.log_interval>0 and epoch_batches%args.log_interval==0:
+                print('Epoch %d/%d batch %d/%d: train_loss=%.4f step=%d elapsed=%.1fs' % (epoch+1,args.epochs,epoch_batches,len(tr_loader),epoch_loss/epoch_batches,step,time.time()-epoch_started),flush=True)
             history.append({'step':step,'epoch':epoch+1,'train_loss':loss.item(),'lr':lr,'tokens_per_sec':int((tgt!=tok.special.pad_id).sum().item())/max(time.time()-t0,1e-6),'val_loss':'','val_perplexity':''})
             budget=args.time_budget_minutes*60
             if budget and time.time()-t0>budget:
-                save_state(ckpt,model,opt,scaler,step,best,stale,epoch,history); write_history(run,history); return
+                save_state(ckpt,model,opt,scaler,step,best,stale,epoch,history); write_history(run,history)
+                print('Time budget reached during epoch %d; checkpoint saved at step %d (%d/%d batches)' % (epoch+1,step,epoch_batches,len(tr_loader)),flush=True)
+                return
         val_loss,ppl=evaluate_loss(model,va_loader,dev,tok.special.pad_id)
         if not math.isfinite(val_loss):
             raise RuntimeError("Non-finite validation loss at epoch %d; refusing to save this checkpoint" % (epoch+1))
@@ -86,6 +93,7 @@ def main():
             best=val_loss; stale=0; torch.save({'model':model.state_dict(),'step':step,'val_loss':best,'config':cfg},bestpath)
         else: stale+=1
         save_state(ckpt,model,opt,scaler,step,best,stale,epoch+1,history); write_history(run,history)
+        print('Epoch %d/%d complete: train_loss=%.4f val_loss=%.4f best_val=%.4f batches=%d elapsed=%.1fs checkpoint=%s' % (epoch+1,args.epochs,epoch_loss/max(epoch_batches,1),val_loss,best,epoch_batches,time.time()-epoch_started,bestpath),flush=True)
         if stale>=args.patience: break
     # Restore best parameters after training for downstream use.
     if bestpath.exists(): model.load_state_dict(torch.load(bestpath,map_location=dev,weights_only=False)['model'])
@@ -95,5 +103,5 @@ def save_state(path,model,opt,scaler,step,best,stale,epoch,history):
     torch.save({'model':model.state_dict(),'optimizer':opt.state_dict(),'scaler':scaler.state_dict(),'step':step,'best':best,'stale':stale,'epoch':epoch,'history':history,'python_rng':random.getstate(),'numpy_rng':np.random.get_state(),'torch_rng':torch.get_rng_state(),'cuda_rng':torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None},path)
 def write_history(run,history):
     with (run/'history.csv').open('w',newline='') as f:
-        w=csv.DictWriter(f,fieldnames=['step','epoch','train_loss','lr','tokens_per_sec','val_loss','val_perplexity']); w.writeheader(); w.writerows(history)
+        w=csv.DictWriter(f,fieldnames=['step','epoch','train_loss','lr','tokens_per_sec','val_loss','val_perplexity'],lineterminator='\n'); w.writeheader(); w.writerows(history)
 if __name__=='__main__': main()
